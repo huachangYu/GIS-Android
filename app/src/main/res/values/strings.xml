@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">test3</string>
+    <string name="LoadLayer">加载图层</string>
+    <string name="ScaleBar">比例尺</string>
+    <string name="Rotate">旋转</string>
+    <string name="ZoomDown">缩小</string>
+    <string name="ZoomUp">放大</string>
+</resources>
