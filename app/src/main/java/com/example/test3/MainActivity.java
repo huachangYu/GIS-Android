@@ -25,8 +25,12 @@ import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.Viewpoint;
 import com.esri.arcgisruntime.mapping.view.MapView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private MapView mMapView;
+    private ArrayList<FeatureLayer> layers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnScaleBar:
                 showScaleBar();
                 break;
-            case R.id.btnLoadLayerV:
-                loadLayer();
-                break;
             default:
                 break;
         }
@@ -98,6 +99,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
                 loadLayer();
+                break;
+            case R.id.btnDeleteLayer:
+                deleteLayer(layers.size() - 1);
                 break;
             default:
                 break;
@@ -125,8 +129,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRotate.setOnClickListener(this);
         Button btnScaleBar = findViewById(R.id.btnScaleBar);
         btnScaleBar.setOnClickListener(this);
-        Button btnLoadLayerV = findViewById(R.id.btnLoadLayerV);
-        btnLoadLayerV.setOnClickListener(this);
     }
 
     private void loadLayer() {
@@ -138,11 +140,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (pShapefileFeatureTable.getLoadStatus() == LoadStatus.LOADED) {
                 FeatureLayer featureLayer = new FeatureLayer(pShapefileFeatureTable);
                 mMapView.getMap().getOperationalLayers().add(featureLayer);
+                layers.add(featureLayer);
                 mMapView.setViewpointAsync(new Viewpoint(featureLayer.getFullExtent()));
             } else {
                 Toast.makeText(MainActivity.this, pShapefileFeatureTable.getLoadStatus().toString() + " " + shpPath, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void deleteLayer(int index) {
+        if (layers.isEmpty()) {
+            Toast.makeText(MainActivity.this, "No layer exits", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mMapView.getMap().getOperationalLayers().remove(layers.get(index));
+        layers.remove(index);
     }
 
     private void zoomUp() {

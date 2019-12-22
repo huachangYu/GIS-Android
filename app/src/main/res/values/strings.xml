@@ -5,4 +5,6 @@
     <string name="Rotate">旋转</string>
     <string name="ZoomDown">缩小</string>
     <string name="ZoomUp">放大</string>
+    <string name="DeleteLayer">删除图层</string>
+    <string name="ManageLayers">图层管理</string>
 </resources>
