@@ -7,4 +7,6 @@
     <string name="ZoomUp">放大</string>
     <string name="DeleteLayer">删除图层</string>
     <string name="ManageLayers">图层管理</string>
+    <string name="LayerNames">图层信息</string>
+    <string name="CancelSelect">取消选择</string>
 </resources>

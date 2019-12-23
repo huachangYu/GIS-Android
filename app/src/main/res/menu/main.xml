@@ -5,6 +5,8 @@
         android:title="@string/LoadLayer" />
     <item android:id="@+id/btnDeleteLayer"
         android:title="@string/DeleteLayer"/>
-    <item android:id="@+id/btnManageLayers"
-        android:title="@string/ManageLayers"/>
+    <item android:id="@+id/btnLayerNames"
+        android:title="@string/LayerNames"/>
+    <item android:id="@+id/btnUnselectAll"
+        android:title="@string/CancelSelect"/>
 </menu>
