@@ -4,34 +4,33 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.Feature;
-import com.esri.arcgisruntime.data.FeatureQueryResult;
-import com.esri.arcgisruntime.data.FeatureTable;
-import com.esri.arcgisruntime.data.QueryParameters;
 import com.esri.arcgisruntime.data.ShapefileFeatureTable;
+import com.esri.arcgisruntime.geometry.Envelope;
+import com.esri.arcgisruntime.geometry.Point;
+import com.esri.arcgisruntime.geometry.Polygon;
+import com.esri.arcgisruntime.geometry.SpatialReference;
 import com.esri.arcgisruntime.layers.FeatureLayer;
 import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.Viewpoint;
-import com.esri.arcgisruntime.mapping.view.DefaultMapViewOnTouchListener;
 import com.esri.arcgisruntime.mapping.view.MapView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -93,7 +92,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 rotate(90);
                 break;
             case R.id.btnScaleBar:
-                showScaleBar();
+                scaleFromDialog();
+                break;
+            case R.id.btnUp:
+                mapMove("UP");
+                break;
+            case R.id.btnDown:
+                mapMove("DOWN");
+                break;
+            case R.id.btnLeft:
+                mapMove("LEFT");
+                break;
+            case R.id.btnRight:
+                mapMove("RIGHT");
                 break;
             default:
                 break;
@@ -113,8 +124,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnLayerNames:
                 manageLayers();
                 break;
-            case R.id.btnUnselectAll:
-                unselectAllFeatures();
+//            case R.id.btnUnselectAll:
+//                unselectAllFeatures();
+//                break;
+            case R.id.btnFullScreen:
+                fullScreen();
                 break;
             default:
                 break;
@@ -154,6 +168,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRotate.setOnClickListener(this);
         Button btnScaleBar = findViewById(R.id.btnScaleBar);
         btnScaleBar.setOnClickListener(this);
+        Button btnUp = findViewById(R.id.btnUp);
+        btnUp.setOnClickListener(this);
+        Button btnDown = findViewById(R.id.btnDown);
+        btnDown.setOnClickListener(this);
+        Button btnLeft = findViewById(R.id.btnLeft);
+        btnLeft.setOnClickListener(this);
+        Button btnRight = findViewById(R.id.btnRight);
+        btnRight.setOnClickListener(this);
     }
 
     private void loadLayer() {
@@ -167,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMapView.getMap().getOperationalLayers().add(featureLayer);
                 layers.add(featureLayer);
                 mMapView.setViewpointAsync(new Viewpoint(featureLayer.getFullExtent()));
-                queryByFeatureAsync();
+//                queryByFeatureAsync();
             } else {
                 Toast.makeText(MainActivity.this, pShapefileFeatureTable.getLoadStatus().toString() + " " + shpPath, Toast.LENGTH_LONG).show();
             }
@@ -198,56 +220,120 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mMapView.setViewpointRotationAsync(nowAngleDegree + angleDegree);
     }
 
-    private void showScaleBar() {
-        double scale = mMapView.getScaleX();
-        Toast.makeText(MainActivity.this, String.format("The Scale is %lf", scale), Toast.LENGTH_LONG).show();
+    @SuppressLint("DefaultLocale")
+    private void setScaleBar(double scale) {
+//        double scale = mMapView.getMapScale();
+//        Toast.makeText(MainActivity.this, String.format("The Scale is %.4f", scale), Toast.LENGTH_LONG).show();
+        double nowScale = mMapView.getMapScale();
+        double d = scale / nowScale;
+        mMapView.setViewpointScaleAsync((float) (d * nowScale));
+        mMapView.setViewpointScaleAsync((float) (d * nowScale));
     }
 
-    private void queryByFeatureAsync() {
-        FeatureLayer mFeatureLayer = layers.get(layers.size() - 1);
-        mMapView.setOnTouchListener(new DefaultMapViewOnTouchListener(this, mMapView) {
-            @Override
-            public boolean onSingleTapConfirmed(MotionEvent e) {
-                android.graphics.Point screenPoint = new android.graphics.Point(Math.round(e.getX()), Math.round(e.getY()));
-                com.esri.arcgisruntime.geometry.Point clickPoint = mMapView.screenToLocation(screenPoint);
-                QueryParameters query = new QueryParameters();
-                query.setGeometry(clickPoint);
-                FeatureTable mTable = mFeatureLayer.getFeatureTable();
-                final ListenableFuture<FeatureQueryResult> featureQueryResult = mTable.queryFeaturesAsync(query);
-                featureQueryResult.addDoneListener(() -> {
-                    try {
-                        FeatureQueryResult result = featureQueryResult.get();
-                        Iterator<Feature> iterator = result.iterator();
-                        while (iterator.hasNext()) {
-                            Feature feature = iterator.next();
-                            Map<String, Object> attributes = feature.getAttributes();
-                            for (String key : attributes.keySet()) {
-                                Log.e("layer:" + key, String.valueOf(attributes.get(key)));
-                            }
-                            mFeatureLayer.selectFeature(feature);
-                            if (selectedFeatures.keySet().contains(mFeatureLayer)){
-                                selectedFeatures.get(mFeatureLayer).add(feature);
-                            }else {
-                                selectedFeatures.put(mFeatureLayer,new ArrayList<>());
-                                selectedFeatures.get(mFeatureLayer).add(feature);
-                            }
+//    @SuppressLint("ClickableViewAccessibility")
+//    private void queryByFeatureAsync() {
+//        FeatureLayer mFeatureLayer = layers.get(layers.size() - 1);
+//        mMapView.setOnTouchListener(new DefaultMapViewOnTouchListener(this, mMapView) {
+//            @Override
+//            public boolean onSingleTapConfirmed(MotionEvent e) {
+//                android.graphics.Point screenPoint = new android.graphics.Point(Math.round(e.getX()), Math.round(e.getY()));
+//                com.esri.arcgisruntime.geometry.Point clickPoint = mMapView.screenToLocation(screenPoint);
+//                QueryParameters query = new QueryParameters();
+//                query.setGeometry(clickPoint);
+//                FeatureTable mTable = mFeatureLayer.getFeatureTable();
+//                final ListenableFuture<FeatureQueryResult> featureQueryResult = mTable.queryFeaturesAsync(query);
+//                featureQueryResult.addDoneListener(() -> {
+//                    try {
+//                        FeatureQueryResult result = featureQueryResult.get();
+//                        Iterator<Feature> iterator = result.iterator();
+//                        while (iterator.hasNext()) {
+//                            Feature feature = iterator.next();
+//                            Map<String, Object> attributes = feature.getAttributes();
+//                            for (String key : attributes.keySet()) {
+//                                Log.e("layer:" + key, String.valueOf(attributes.get(key)));
+//                            }
+//                            mFeatureLayer.selectFeature(feature);
+//                            if (selectedFeatures.keySet().contains(mFeatureLayer)){
+//                                selectedFeatures.get(mFeatureLayer).add(feature);
+//                            }else {
+//                                selectedFeatures.put(mFeatureLayer,new ArrayList<>());
+//                                selectedFeatures.get(mFeatureLayer).add(feature);
+//                            }
+//
+//                        }
+//
+//                    } catch (Exception exp) {
+//                        exp.printStackTrace();
+//                    }
+//                });
+//                return super.onSingleTapConfirmed(e);
+//            }
+//        });
+//    }
+//
+//    private void unselectAllFeatures() {
+//        for (FeatureLayer keyLayer : selectedFeatures.keySet()) {
+//            keyLayer.unselectFeatures(Objects.requireNonNull(selectedFeatures.get(keyLayer)));
+//            selectedFeatures.remove(keyLayer);
+//        }
+//    }
 
-                        }
-
-                    } catch (Exception exp) {
-                        exp.printStackTrace();
-                    }
-                });
-                return super.onSingleTapConfirmed(e);
-            }
-        });
-    }
-
-    private void unselectAllFeatures() {
-        for (FeatureLayer keyLayer : selectedFeatures.keySet()) {
-            keyLayer.unselectFeatures(selectedFeatures.get(keyLayer));
-            selectedFeatures.remove(keyLayer);
+    private void mapMove(String cmd) {
+        Polygon visibleArea = mMapView.getVisibleArea();
+        Envelope extent = visibleArea.getExtent();
+        SpatialReference ref = extent.getSpatialReference();
+        Point center = extent.getCenter();
+        double height = extent.getHeight();
+        double width = extent.getWidth();
+        double dx = visibleArea.getExtent().getXMax() - visibleArea.getExtent().getXMin();
+        double dy = visibleArea.getExtent().getYMax() - visibleArea.getExtent().getYMin();
+        Point newCenter;
+        switch (cmd) {
+            case "UP":
+                newCenter = new Point(center.getX(), center.getY() + 0.25 * dy, ref);
+                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
+                break;
+            case "DOWN":
+                newCenter = new Point(center.getX(), center.getY() - 0.25 * dy, ref);
+                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
+                break;
+            case "LEFT":
+                newCenter = new Point(center.getX() - 0.25 * dx, center.getY(), ref);
+                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
+                break;
+            case "RIGHT":
+                newCenter = new Point(center.getX() + 0.25 * dx, center.getY(), ref);
+                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
+                break;
+            default:
+                break;
         }
     }
 
+    private void fullScreen() {
+        LinearLayout linearLayout0 = findViewById(R.id.layoutLine0);
+        LinearLayout linearLayout1 = findViewById(R.id.layoutLine1);
+        int state = linearLayout0.getVisibility();
+        if (state == View.VISIBLE) {
+            linearLayout0.setVisibility(View.GONE);
+            linearLayout1.setVisibility(View.GONE);
+        } else {
+            linearLayout0.setVisibility(View.VISIBLE);
+            linearLayout1.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void scaleFromDialog() {
+        final EditText et = new EditText(MainActivity.this);
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("scale")
+                .setView(et)
+                .setPositiveButton("ok", (dialog, which) -> {
+                    String input = et.getText().toString();
+                    setScaleBar(Double.valueOf(input));
+                })
+                .setNegativeButton("cancel", null)
+                .show();
+
+    }
 }

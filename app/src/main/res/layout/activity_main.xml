@@ -12,6 +12,7 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/layoutLine0"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:gravity="center"
@@ -45,6 +46,49 @@
                 android:layout_height="match_parent"
                 android:text="@string/ScaleBar"
                 tools:ignore="ButtonStyle" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/layoutLine1"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center">
+                <Button
+                    android:id="@+id/btnUp"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:text="@string/up"
+                    android:layout_gravity="center_horizontal"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+                <Button
+                    android:id="@+id/btnLeft"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:text="@string/left"/>
+                <Button
+                    android:id="@+id/btnRight"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:text="@string/right"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center">
+                <Button
+                    android:id="@+id/btnDown"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:text="@string/down"/>
+            </LinearLayout>
         </LinearLayout>
 
         <com.esri.arcgisruntime.mapping.view.MapView
