@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 deleteLayer(layers.size() - 1);
                 break;
             case R.id.btnLayerNames:
-                manageLayers();
+                showLayersInfo();
                 break;
 //            case R.id.btnUnselectAll:
 //                unselectAllFeatures();
@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-    private void manageLayers() {
+    private void showLayersInfo() {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this) {
         };
         StringBuilder layerNames = new StringBuilder();
@@ -222,8 +222,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @SuppressLint("DefaultLocale")
     private void setScaleBar(double scale) {
-//        double scale = mMapView.getMapScale();
-//        Toast.makeText(MainActivity.this, String.format("The Scale is %.4f", scale), Toast.LENGTH_LONG).show();
         double nowScale = mMapView.getMapScale();
         double d = scale / nowScale;
         mMapView.setViewpointScaleAsync((float) (d * nowScale));
