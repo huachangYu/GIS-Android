@@ -8,16 +8,22 @@ import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.Feature;
+import com.esri.arcgisruntime.data.FeatureQueryResult;
+import com.esri.arcgisruntime.data.FeatureTable;
+import com.esri.arcgisruntime.data.QueryParameters;
 import com.esri.arcgisruntime.data.ShapefileFeatureTable;
 import com.esri.arcgisruntime.geometry.Envelope;
 import com.esri.arcgisruntime.geometry.Point;
@@ -28,6 +34,7 @@ import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.Viewpoint;
+import com.esri.arcgisruntime.mapping.view.DefaultMapViewOnTouchListener;
 import com.esri.arcgisruntime.mapping.view.MapView;
 import com.esri.arcgisruntime.symbology.SimpleFillSymbol;
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
@@ -35,7 +42,9 @@ import com.esri.arcgisruntime.symbology.SimpleRenderer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private MapView mMapView;
@@ -120,9 +129,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
-                loadLayer("/Download/china/bou2_4p.shp",Color.GRAY,Color.DKGRAY);
-                loadLayer("/Download/china/hyd1_4p.shp",Color.BLUE,Color.BLUE);
-                loadLayer("/Download/china/roa_4m.shp",Color.RED,Color.RED);
+                //loadLayer("/Download/china/bou2_4p.shp", Color.GRAY, Color.DKGRAY);
+                loadLayer("/Download/china/hyd1_4p.shp", Color.BLUE, Color.BLUE);
+                loadLayer("/Download/china/roa_4m.shp", Color.RED, Color.RED);
+                queryByFeatureAsync();
                 break;
             case R.id.btnDeleteLayer:
                 deleteLayer(layers.size() - 1);
@@ -130,9 +140,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnLayerNames:
                 showLayersInfo();
                 break;
-//            case R.id.btnUnselectAll:
-//                unselectAllFeatures();
-//                break;
+            case R.id.btnCancelSelect:
+                cancelSelect();
+                break;
             case R.id.btnFullScreen:
                 fullScreen();
                 break;
@@ -185,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRight.setOnClickListener(this);
     }
 
-    private void loadLayer(String fileRelativePath,int lineColor,int fillColor) {
+    private void loadLayer(String fileRelativePath, int lineColor, int fillColor) {
         String shpPath = Environment.getExternalStorageDirectory() + fileRelativePath;
         ShapefileFeatureTable pShapefileFeatureTable = new ShapefileFeatureTable(shpPath);
         pShapefileFeatureTable.loadAsync();
@@ -199,7 +209,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMapView.getMap().getOperationalLayers().add(featureLayer);
                 layers.add(featureLayer);
                 mMapView.setViewpointAsync(new Viewpoint(featureLayer.getFullExtent()));
-//                queryByFeatureAsync();
             } else {
                 Toast.makeText(MainActivity.this, pShapefileFeatureTable.getLoadStatus().toString() + " " + shpPath, Toast.LENGTH_LONG).show();
             }
@@ -238,53 +247,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mMapView.setViewpointScaleAsync((float) (d * nowScale));
     }
 
-//    @SuppressLint("ClickableViewAccessibility")
-//    private void queryByFeatureAsync() {
-//        FeatureLayer mFeatureLayer = layers.get(layers.size() - 1);
-//        mMapView.setOnTouchListener(new DefaultMapViewOnTouchListener(this, mMapView) {
-//            @Override
-//            public boolean onSingleTapConfirmed(MotionEvent e) {
-//                android.graphics.Point screenPoint = new android.graphics.Point(Math.round(e.getX()), Math.round(e.getY()));
-//                com.esri.arcgisruntime.geometry.Point clickPoint = mMapView.screenToLocation(screenPoint);
-//                QueryParameters query = new QueryParameters();
-//                query.setGeometry(clickPoint);
-//                FeatureTable mTable = mFeatureLayer.getFeatureTable();
-//                final ListenableFuture<FeatureQueryResult> featureQueryResult = mTable.queryFeaturesAsync(query);
-//                featureQueryResult.addDoneListener(() -> {
-//                    try {
-//                        FeatureQueryResult result = featureQueryResult.get();
-//                        Iterator<Feature> iterator = result.iterator();
-//                        while (iterator.hasNext()) {
-//                            Feature feature = iterator.next();
-//                            Map<String, Object> attributes = feature.getAttributes();
-//                            for (String key : attributes.keySet()) {
-//                                Log.e("layer:" + key, String.valueOf(attributes.get(key)));
-//                            }
-//                            mFeatureLayer.selectFeature(feature);
-//                            if (selectedFeatures.keySet().contains(mFeatureLayer)){
-//                                selectedFeatures.get(mFeatureLayer).add(feature);
-//                            }else {
-//                                selectedFeatures.put(mFeatureLayer,new ArrayList<>());
-//                                selectedFeatures.get(mFeatureLayer).add(feature);
-//                            }
-//
-//                        }
-//
-//                    } catch (Exception exp) {
-//                        exp.printStackTrace();
-//                    }
-//                });
-//                return super.onSingleTapConfirmed(e);
-//            }
-//        });
-//    }
-//
-//    private void unselectAllFeatures() {
-//        for (FeatureLayer keyLayer : selectedFeatures.keySet()) {
-//            keyLayer.unselectFeatures(Objects.requireNonNull(selectedFeatures.get(keyLayer)));
-//            selectedFeatures.remove(keyLayer);
-//        }
-//    }
+    @SuppressLint("ClickableViewAccessibility")
+    private void queryByFeatureAsync() {
+        mMapView.setOnTouchListener(new DefaultMapViewOnTouchListener(this, mMapView) {
+            @Override
+            public boolean onSingleTapConfirmed(MotionEvent e) {
+                android.graphics.Point screenPoint = new android.graphics.Point(Math.round(e.getX()), Math.round(e.getY()));
+                com.esri.arcgisruntime.geometry.Point clickPoint = mMapView.screenToLocation(screenPoint);
+                QueryParameters query = new QueryParameters();
+                query.setGeometry(clickPoint);
+                StringBuilder info = new StringBuilder();
+                for (FeatureLayer iFeatureLayer : layers) {
+                    FeatureTable mTable = iFeatureLayer.getFeatureTable();
+                    final ListenableFuture<FeatureQueryResult> featureQueryResult = mTable.queryFeaturesAsync(query);
+                    featureQueryResult.addDoneListener(() -> {
+                        try {
+                            FeatureQueryResult result = featureQueryResult.get();
+                            Iterator<Feature> iterator = result.iterator();
+                            while (iterator.hasNext()) {
+                                Feature feature = iterator.next();
+                                Map<String, Object> attributes = feature.getAttributes();
+                                for (String key : attributes.keySet()) {
+                                    StringBuilder ifi = new StringBuilder(key + ":" + String.valueOf(attributes.get(key))+"\n");
+                                    info.append(ifi);
+                                }
+                                iFeatureLayer.selectFeature(feature);
+                                if (selectedFeatures.keySet().contains(iFeatureLayer)) {
+                                    selectedFeatures.get(iFeatureLayer).add(feature);
+                                } else {
+                                    selectedFeatures.put(iFeatureLayer, new ArrayList<>());
+                                    selectedFeatures.get(iFeatureLayer).add(feature);
+                                }
+                            }
+                            if (iFeatureLayer == layers.get(layers.size()-1)){
+                                AlertDialog.Builder dialogInfo = new AlertDialog.Builder(MainActivity.this) {};
+                                dialogInfo.setMessage(info);
+                                dialogInfo.show();
+                            }
+                        } catch (Exception exp) {
+                            exp.printStackTrace();
+                        }
+                    });
+                }
+                return super.onSingleTapConfirmed(e);
+            }
+        });
+    }
+
+    private void cancelSelect() {
+        for (FeatureLayer keyLayer : selectedFeatures.keySet()) {
+            keyLayer.unselectFeatures(Objects.requireNonNull(selectedFeatures.get(keyLayer)));
+        }
+    }
 
     private void mapMove(String cmd) {
         Polygon visibleArea = mMapView.getVisibleArea();
