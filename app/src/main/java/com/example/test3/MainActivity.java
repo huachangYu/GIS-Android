@@ -5,6 +5,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
@@ -28,6 +29,9 @@ import com.esri.arcgisruntime.mapping.ArcGISMap;
 import com.esri.arcgisruntime.mapping.Basemap;
 import com.esri.arcgisruntime.mapping.Viewpoint;
 import com.esri.arcgisruntime.mapping.view.MapView;
+import com.esri.arcgisruntime.symbology.SimpleFillSymbol;
+import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
+import com.esri.arcgisruntime.symbology.SimpleRenderer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,7 +120,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
-                loadLayer();
+                loadLayer("/Download/china/bou2_4p.shp",Color.GRAY,Color.DKGRAY);
+                loadLayer("/Download/china/hyd1_4p.shp",Color.BLUE,Color.BLUE);
+                loadLayer("/Download/china/roa_4m.shp",Color.RED,Color.RED);
                 break;
             case R.id.btnDeleteLayer:
                 deleteLayer(layers.size() - 1);
@@ -142,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         StringBuilder layerNames = new StringBuilder();
         for (FeatureLayer layer : layers) {
             layerNames.append(layer.getName());
+            layerNames.append("\n");
         }
         dialog.setMessage(layerNames).setPositiveButton("OK", (dialog1, which) -> {
         });
@@ -178,14 +185,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRight.setOnClickListener(this);
     }
 
-    private void loadLayer() {
-        final String fileRelativePath = "/Download/assets/bou2_4p.shp";
+    private void loadLayer(String fileRelativePath,int lineColor,int fillColor) {
         String shpPath = Environment.getExternalStorageDirectory() + fileRelativePath;
         ShapefileFeatureTable pShapefileFeatureTable = new ShapefileFeatureTable(shpPath);
         pShapefileFeatureTable.loadAsync();
         pShapefileFeatureTable.addDoneLoadingListener(() -> {
             if (pShapefileFeatureTable.getLoadStatus() == LoadStatus.LOADED) {
                 FeatureLayer featureLayer = new FeatureLayer(pShapefileFeatureTable);
+                SimpleLineSymbol lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, lineColor, 1.0f);
+                SimpleFillSymbol fillSymbol = new SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, fillColor, lineSymbol);
+                SimpleRenderer renderer = new SimpleRenderer(fillSymbol);
+                featureLayer.setRenderer(renderer);
                 mMapView.getMap().getOperationalLayers().add(featureLayer);
                 layers.add(featureLayer);
                 mMapView.setViewpointAsync(new Viewpoint(featureLayer.getFullExtent()));
