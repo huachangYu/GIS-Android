@@ -15,4 +15,7 @@
     <string name="down">Down</string>
     <string name="FullScreen">全屏</string>
     <string name="CancelFullScreen">取消全屏</string>
+    <string name="ok">OK</string>
+    <string name="search">search</string>
+    <string name="clear">clear</string>
 </resources>

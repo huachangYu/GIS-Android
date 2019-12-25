@@ -5,6 +5,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -40,6 +41,7 @@ import com.esri.arcgisruntime.symbology.SimpleFillSymbol;
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
 import com.esri.arcgisruntime.symbology.SimpleRenderer;
 
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -107,17 +109,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnScaleBar:
                 scaleFromDialog();
                 break;
-            case R.id.btnUp:
-                mapMove("UP");
+            case R.id.btnClear:
+                clearInput();
                 break;
-            case R.id.btnDown:
-                mapMove("DOWN");
-                break;
-            case R.id.btnLeft:
-                mapMove("LEFT");
-                break;
-            case R.id.btnRight:
-                mapMove("RIGHT");
+            case R.id.btnSearch:
+                search();
                 break;
             default:
                 break;
@@ -129,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
-                //loadLayer("/Download/china/bou2_4p.shp", Color.GRAY, Color.DKGRAY);
+                loadLayer("/Download/province/province.shp", Color.GRAY, Color.DKGRAY);
                 loadLayer("/Download/china/hyd1_4p.shp", Color.BLUE, Color.BLUE);
                 loadLayer("/Download/china/roa_4m.shp", Color.RED, Color.RED);
                 queryByFeatureAsync();
@@ -150,6 +146,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
         return true;
+    }
+
+    private void clearInput() {
+        EditText editTextSearch = findViewById(R.id.txtSearch);
+        editTextSearch.setText("");
     }
 
     private void showLayersInfo() {
@@ -185,14 +186,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnRotate.setOnClickListener(this);
         Button btnScaleBar = findViewById(R.id.btnScaleBar);
         btnScaleBar.setOnClickListener(this);
-        Button btnUp = findViewById(R.id.btnUp);
-        btnUp.setOnClickListener(this);
-        Button btnDown = findViewById(R.id.btnDown);
-        btnDown.setOnClickListener(this);
-        Button btnLeft = findViewById(R.id.btnLeft);
-        btnLeft.setOnClickListener(this);
-        Button btnRight = findViewById(R.id.btnRight);
-        btnRight.setOnClickListener(this);
+        Button btnClear = findViewById(R.id.btnClear);
+        btnClear.setOnClickListener(this);
+        Button btnSearch = findViewById(R.id.btnSearch);
+        btnSearch.setOnClickListener(this);
     }
 
     private void loadLayer(String fileRelativePath, int lineColor, int fillColor) {
@@ -268,7 +265,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 Feature feature = iterator.next();
                                 Map<String, Object> attributes = feature.getAttributes();
                                 for (String key : attributes.keySet()) {
-                                    StringBuilder ifi = new StringBuilder(key + ":" + String.valueOf(attributes.get(key))+"\n");
+                                    String atr = String.valueOf(attributes.get(key));
+                                    String atr_utf8 = new String(atr.getBytes("GB2312"));
+                                    StringBuilder ifi = new StringBuilder(key + ":" + atr + "\n");
                                     info.append(ifi);
                                 }
                                 iFeatureLayer.selectFeature(feature);
@@ -279,9 +278,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     selectedFeatures.get(iFeatureLayer).add(feature);
                                 }
                             }
-                            if (iFeatureLayer == layers.get(layers.size()-1)){
-                                AlertDialog.Builder dialogInfo = new AlertDialog.Builder(MainActivity.this) {};
-                                dialogInfo.setMessage(info);
+                            if (iFeatureLayer == layers.get(layers.size() - 1)) {
+                                AlertDialog.Builder dialogInfo = new AlertDialog.Builder(MainActivity.this) {
+                                };
+                                dialogInfo.setMessage(info).setPositiveButton("ok", (dialog, which) -> {
+                                    cancelSelect();
+                                });
                                 dialogInfo.show();
                             }
                         } catch (Exception exp) {
@@ -292,6 +294,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return super.onSingleTapConfirmed(e);
             }
         });
+    }
+
+    private void search() {
+        EditText txtSearch = findViewById(R.id.txtSearch);
+        String txt = txtSearch.getText().toString().trim();
+        for (FeatureLayer layer : layers) {
+            QueryParameters query = new QueryParameters();
+            query.setGeometry(layer.getFullExtent());
+            FeatureTable mTable = layer.getFeatureTable();
+            final ListenableFuture<FeatureQueryResult> featureQueryResult = mTable.queryFeaturesAsync(query);
+            featureQueryResult.addDoneListener(() -> {
+                try {
+                    FeatureQueryResult result = featureQueryResult.get();
+                    Iterator<Feature> iterator = result.iterator();
+                    while (iterator.hasNext()) {
+                        Feature feature = iterator.next();
+                        Map<String, Object> attributes = feature.getAttributes();
+                        boolean okFeature = false;
+                        for (String key : attributes.keySet()) {
+                            String atr = String.valueOf(attributes.get(key));
+                            if (atr.endsWith(txt)){
+                                okFeature = true;
+                                break;
+                            }
+                        }
+                        if (okFeature){
+                            layer.selectFeature(feature);
+                            if (selectedFeatures.keySet().contains(layer)) {
+                                selectedFeatures.get(layer).add(feature);
+                            } else {
+                                selectedFeatures.put(layer, new ArrayList<>());
+                                selectedFeatures.get(layer).add(feature);
+                            }
+                        }
+                    }
+                } catch (Exception exp) {
+                    exp.printStackTrace();
+                }
+            });
+
+
+        }
     }
 
     private void cancelSelect() {
@@ -334,14 +378,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void fullScreen() {
         LinearLayout linearLayout0 = findViewById(R.id.layoutLine0);
-        LinearLayout linearLayout1 = findViewById(R.id.layoutLine1);
         int state = linearLayout0.getVisibility();
         if (state == View.VISIBLE) {
             linearLayout0.setVisibility(View.GONE);
-            linearLayout1.setVisibility(View.GONE);
         } else {
             linearLayout0.setVisibility(View.VISIBLE);
-            linearLayout1.setVisibility(View.VISIBLE);
         }
     }
 
