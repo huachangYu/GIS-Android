@@ -344,37 +344,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void mapMove(String cmd) {
-        Polygon visibleArea = mMapView.getVisibleArea();
-        Envelope extent = visibleArea.getExtent();
-        SpatialReference ref = extent.getSpatialReference();
-        Point center = extent.getCenter();
-        double height = extent.getHeight();
-        double width = extent.getWidth();
-        double dx = visibleArea.getExtent().getXMax() - visibleArea.getExtent().getXMin();
-        double dy = visibleArea.getExtent().getYMax() - visibleArea.getExtent().getYMin();
-        Point newCenter;
-        switch (cmd) {
-            case "UP":
-                newCenter = new Point(center.getX(), center.getY() + 0.25 * dy, ref);
-                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
-                break;
-            case "DOWN":
-                newCenter = new Point(center.getX(), center.getY() - 0.25 * dy, ref);
-                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
-                break;
-            case "LEFT":
-                newCenter = new Point(center.getX() - 0.25 * dx, center.getY(), ref);
-                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
-                break;
-            case "RIGHT":
-                newCenter = new Point(center.getX() + 0.25 * dx, center.getY(), ref);
-                mMapView.setViewpointAsync(new Viewpoint(new Envelope(newCenter, width, height)));
-                break;
-            default:
-                break;
-        }
-    }
 
     private void fullScreen() {
         LinearLayout linearLayout0 = findViewById(R.id.layoutLine0);
