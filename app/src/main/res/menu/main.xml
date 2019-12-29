@@ -2,13 +2,9 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/btnLoadLayer"
-        android:title="@string/LoadLayer" />
-    <item android:id="@+id/btnDeleteLayer"
-        android:title="@string/DeleteLayer"/>
+        android:title="@string/AddLayer" />
     <item android:id="@+id/btnLayerNames"
         android:title="@string/LayerNames"/>
-<!--    <item android:id="@+id/btnUnselectAll"-->
-<!--        android:title="@string/CancelSelect"/>-->
     <item android:id="@+id/btnFullScreen"
         android:title="@string/FullScreen"/>
 </menu>

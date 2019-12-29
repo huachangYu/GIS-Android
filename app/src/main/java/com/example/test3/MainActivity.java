@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 zoomDown();
                 break;
             case R.id.btnRotate:
-                rotate(90);
+                rotate(45);
                 break;
             case R.id.btnScaleBar:
                 scaleFromDialog();
@@ -120,19 +120,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
-                loadLayer("/Download/china/bou2_4p.shp",Color.GRAY,Color.DKGRAY);
-                loadLayer("/Download/china/hyd1_4p.shp",Color.BLUE,Color.BLUE);
-                loadLayer("/Download/china/roa_4m.shp",Color.RED,Color.RED);
-                break;
-            case R.id.btnDeleteLayer:
-                deleteLayer(layers.size() - 1);
+                loadLayer("/Download/hunan/Hunan.shp",Color.GRAY,Color.DKGRAY);
                 break;
             case R.id.btnLayerNames:
                 showLayersInfo();
                 break;
-//            case R.id.btnUnselectAll:
-//                unselectAllFeatures();
-//                break;
             case R.id.btnFullScreen:
                 fullScreen();
                 break;
@@ -143,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showLayersInfo() {
-        final AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this) {
+        /*final AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this) {
         };
         StringBuilder layerNames = new StringBuilder();
         for (FeatureLayer layer : layers) {
@@ -152,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         dialog.setMessage(layerNames).setPositiveButton("OK", (dialog1, which) -> {
         });
-        dialog.show();
+        dialog.show();*/
+        Toast.makeText(MainActivity.this,"Layer:Hunan",Toast.LENGTH_LONG).show();
     }
 
     private void setupMap() {
@@ -199,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mMapView.getMap().getOperationalLayers().add(featureLayer);
                 layers.add(featureLayer);
                 mMapView.setViewpointAsync(new Viewpoint(featureLayer.getFullExtent()));
-//                queryByFeatureAsync();
             } else {
                 Toast.makeText(MainActivity.this, pShapefileFeatureTable.getLoadStatus().toString() + " " + shpPath, Toast.LENGTH_LONG).show();
             }
@@ -332,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void scaleFromDialog() {
-        final EditText et = new EditText(MainActivity.this);
+        /*final EditText et = new EditText(MainActivity.this);
         new AlertDialog.Builder(MainActivity.this)
                 .setTitle("scale")
                 .setView(et)
@@ -341,7 +333,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     setScaleBar(Double.valueOf(input));
                 })
                 .setNegativeButton("cancel", null)
-                .show();
+                .show();*/
+        double scale = mMapView.getMapScale();
+        Toast.makeText(MainActivity.this,"比例尺为"+String.valueOf(scale),Toast.LENGTH_LONG).show();
 
     }
 }
