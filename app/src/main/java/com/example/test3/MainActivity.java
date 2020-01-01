@@ -1,15 +1,9 @@
 package com.example.test3;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
-import android.app.DownloadManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,16 +14,16 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.esri.arcgisruntime.concurrent.ListenableFuture;
 import com.esri.arcgisruntime.data.Feature;
 import com.esri.arcgisruntime.data.FeatureQueryResult;
 import com.esri.arcgisruntime.data.FeatureTable;
 import com.esri.arcgisruntime.data.QueryParameters;
 import com.esri.arcgisruntime.data.ShapefileFeatureTable;
-import com.esri.arcgisruntime.geometry.Envelope;
-import com.esri.arcgisruntime.geometry.Point;
-import com.esri.arcgisruntime.geometry.Polygon;
-import com.esri.arcgisruntime.geometry.SpatialReference;
 import com.esri.arcgisruntime.layers.FeatureLayer;
 import com.esri.arcgisruntime.loadable.LoadStatus;
 import com.esri.arcgisruntime.mapping.ArcGISMap;
@@ -41,7 +35,6 @@ import com.esri.arcgisruntime.symbology.SimpleFillSymbol;
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol;
 import com.esri.arcgisruntime.symbology.SimpleRenderer;
 
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -97,21 +90,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btnZoomUp:
-                zoomUp();
-                break;
-            case R.id.btnZoomDown:
-                zoomDown();
-                break;
-            case R.id.btnRotate:
-                rotate(90);
-                break;
-            case R.id.btnScaleBar:
-                scaleFromDialog();
-                break;
-            case R.id.btnClear:
-                clearInput();
-                break;
             case R.id.btnSearch:
                 search();
                 break;
@@ -125,32 +103,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.btnLoadLayer:
-                loadLayer("/Download/province/province.shp", Color.GRAY, Color.DKGRAY);
-                loadLayer("/Download/china/hyd1_4p.shp", Color.BLUE, Color.BLUE);
-                loadLayer("/Download/china/roa_4m.shp", Color.RED, Color.RED);
+                loadLayer("/Download/Xinjiang/Xinjiang.shp", Color.BLACK, Color.YELLOW);
                 queryByFeatureAsync();
                 break;
             case R.id.btnDeleteLayer:
                 deleteLayer(layers.size() - 1);
                 break;
-            case R.id.btnLayerNames:
-                showLayersInfo();
-                break;
             case R.id.btnCancelSelect:
                 cancelSelect();
-                break;
-            case R.id.btnFullScreen:
-                fullScreen();
                 break;
             default:
                 break;
         }
         return true;
-    }
-
-    private void clearInput() {
-        EditText editTextSearch = findViewById(R.id.txtSearch);
-        editTextSearch.setText("");
     }
 
     private void showLayersInfo() {
@@ -178,16 +143,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setupButton() {
-        Button btnZoomUp = findViewById(R.id.btnZoomUp);
-        btnZoomUp.setOnClickListener(this);
-        Button btnZoomDown = findViewById(R.id.btnZoomDown);
-        btnZoomDown.setOnClickListener(this);
-        Button btnRotate = findViewById(R.id.btnRotate);
-        btnRotate.setOnClickListener(this);
-        Button btnScaleBar = findViewById(R.id.btnScaleBar);
-        btnScaleBar.setOnClickListener(this);
-        Button btnClear = findViewById(R.id.btnClear);
-        btnClear.setOnClickListener(this);
         Button btnSearch = findViewById(R.id.btnSearch);
         btnSearch.setOnClickListener(this);
     }
@@ -221,21 +176,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         layers.remove(index);
     }
 
-    private void zoomUp() {
-        double scale = mMapView.getMapScale();
-        mMapView.setViewpointScaleAsync(scale * 0.5);
-    }
-
-    private void zoomDown() {
-        double scale = mMapView.getMapScale();
-        mMapView.setViewpointScaleAsync(scale * 2);
-    }
-
-    private void rotate(double angleDegree) {
-        double nowAngleDegree = mMapView.getMapRotation();
-        mMapView.setViewpointRotationAsync(nowAngleDegree + angleDegree);
-    }
-
     @SuppressLint("DefaultLocale")
     private void setScaleBar(double scale) {
         double nowScale = mMapView.getMapScale();
@@ -267,8 +207,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 for (String key : attributes.keySet()) {
                                     String atr = String.valueOf(attributes.get(key));
                                     String atr_utf8 = new String(atr.getBytes("GB2312"));
-                                    StringBuilder ifi = new StringBuilder(key + ":" + atr + "\n");
-                                    info.append(ifi);
+                                    if (key.equals("NAME_2")) {
+                                        StringBuilder ifi = new StringBuilder(atr + "\n");
+                                        info.append(ifi);
+                                    }
                                 }
                                 iFeatureLayer.selectFeature(feature);
                                 if (selectedFeatures.keySet().contains(iFeatureLayer)) {
@@ -279,12 +221,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 }
                             }
                             if (iFeatureLayer == layers.get(layers.size() - 1)) {
-                                AlertDialog.Builder dialogInfo = new AlertDialog.Builder(MainActivity.this) {
-                                };
-                                dialogInfo.setMessage(info).setPositiveButton("ok", (dialog, which) -> {
-                                    cancelSelect();
-                                });
-                                dialogInfo.show();
+                                Toast.makeText(MainActivity.this,info,Toast.LENGTH_LONG).show();
                             }
                         } catch (Exception exp) {
                             exp.printStackTrace();
@@ -342,30 +279,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (FeatureLayer keyLayer : selectedFeatures.keySet()) {
             keyLayer.unselectFeatures(Objects.requireNonNull(selectedFeatures.get(keyLayer)));
         }
-    }
-
-
-    private void fullScreen() {
-        LinearLayout linearLayout0 = findViewById(R.id.layoutLine0);
-        int state = linearLayout0.getVisibility();
-        if (state == View.VISIBLE) {
-            linearLayout0.setVisibility(View.GONE);
-        } else {
-            linearLayout0.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void scaleFromDialog() {
-        final EditText et = new EditText(MainActivity.this);
-        new AlertDialog.Builder(MainActivity.this)
-                .setTitle("scale")
-                .setView(et)
-                .setPositiveButton("ok", (dialog, which) -> {
-                    String input = et.getText().toString();
-                    setScaleBar(Double.valueOf(input));
-                })
-                .setNegativeButton("cancel", null)
-                .show();
-
     }
 }

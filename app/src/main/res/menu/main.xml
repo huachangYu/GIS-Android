@@ -5,10 +5,6 @@
         android:title="@string/LoadLayer" />
     <item android:id="@+id/btnDeleteLayer"
         android:title="@string/DeleteLayer"/>
-    <item android:id="@+id/btnLayerNames"
-        android:title="@string/LayerNames"/>
     <item android:id="@+id/btnCancelSelect"
         android:title="@string/CancelSelect"/>
-    <item android:id="@+id/btnFullScreen"
-        android:title="@string/FullScreen"/>
 </menu>
